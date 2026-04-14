@@ -1,0 +1,94 @@
+{
+  "base": {
+    "symbol": "159740",
+    "interval": "30m",
+    "timezone": "Asia/Shanghai",
+    "base_dir": "etf_t0_quant"
+  },
+  "data": {
+    "source": "tickflow",
+    "tickflow_token": "tk_26257d2ae59645ccbdf30403fa624df6",
+    "incremental_window_days": 5,
+    "local_csv_path": null,
+    "needs_resample": false
+  },
+  "feature": {
+    "lookback_window": 30,
+    "rsi_period": 14,
+    "atr_period": 14,
+    "ema_short": 12,
+    "ema_long": 26,
+    "ma_period": 20,
+    "bb_period": 20,
+    "bb_std": 2.0,
+    "volume_ma_period": 20,
+    "normalization_window": 176,
+    "normalization_min_periods": 30,
+    "feature_columns": [
+      "returns_norm",
+      "amplitude_norm",
+      "volume_ratio_norm",
+      "close_position",
+      "rsi_norm",
+      "atr_ratio_norm",
+      "ema_diff_norm",
+      "bb_width_norm",
+      "vol20_norm",
+      "time_slot",
+      "is_near_close"
+    ]
+  },
+  "env": {
+    "initial_cash": 100000.0,
+    "fee_rate_buy": 5e-05,
+    "fee_rate_sell": 5e-05,
+    "min_fee": 5.0,
+    "lot_size": 100,
+    "reward_mode": "nav_log",
+    "allow_overnight": true
+  },
+  "train": {
+    "model_type": "dqn",
+    "total_timesteps": 200000,
+    "learning_rate": 0.0001,
+    "batch_size": 64,
+    "gamma": 0.99,
+    "replay_buffer_size": 50000,
+    "target_update_interval": 1000,
+    "exploration_fraction": 0.3,
+    "exploration_final_eps": 0.05,
+    "net_arch": [
+      256,
+      256
+    ],
+    "seed": 42,
+    "train_days": 120,
+    "val_days": 20,
+    "test_days": 20,
+    "step_days": 20,
+    "n_trials": 20,
+    "optuna_timeout": 3600
+  },
+  "backtest": {
+    "slippage_rate": 0.0,
+    "min_trades": 30,
+    "sharpe_threshold": 1.0,
+    "max_drawdown_threshold": 0.15,
+    "profit_factor_threshold": 1.1,
+    "wf_pass_ratio": 0.6667
+  },
+  "risk": {
+    "max_position_ratio": 1.0,
+    "gap_threshold": 0.02,
+    "max_daily_gap_hits": 2,
+    "data_delay_bars": 2,
+    "max_consecutive_data_failures": 3,
+    "nav_drawdown_halt": 0.05,
+    "nav_drawdown_halt_train": 0.2,
+    "gap_action_down": "hold"
+  },
+  "notifier": {
+    "enabled": false,
+    "feishu_webhook": null
+  }
+}

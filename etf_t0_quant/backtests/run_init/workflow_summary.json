@@ -1,0 +1,38 @@
+{
+  "run_id": "init",
+  "symbol": "159740",
+  "interval": "30m",
+  "total_bars": 2275,
+  "date_range": [
+    "2025-02-11 14:30:00+08:00",
+    "2026-04-14 10:00:00+08:00"
+  ],
+  "split": {
+    "train_bars": 1592,
+    "val_bars": 341,
+    "test_bars": 342
+  },
+  "hpo_timesteps_per_trial": 40000,
+  "best_hpo_params": {
+    "learning_rate": 1.0220690547060621e-05,
+    "batch_size": 32,
+    "gamma": 0.95,
+    "replay_buffer_size": 20000,
+    "target_update_interval": 2000,
+    "exploration_fraction": 0.44385995007822054
+  },
+  "final_timesteps": 200000,
+  "model_path": "etf_t0_quant/models/159740/30m/20260414_100018_init",
+  "test_metrics": {
+    "cumulative_return": -0.0446299263477713,
+    "annualised_return": -0.6128341567857085,
+    "sharpe_ratio": -7.084049106016323,
+    "sortino_ratio": -6.233716746381828,
+    "max_drawdown": 0.053669266243115785,
+    "n_trades": 33,
+    "profit_factor": 0.2603655462447561,
+    "win_rate": 0.09090909090909091,
+    "avg_holding_bars": 1.0
+  },
+  "report_dir": "etf_t0_quant/backtests/run_init"
+}

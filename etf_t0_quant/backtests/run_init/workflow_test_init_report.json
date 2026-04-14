@@ -1,0 +1,24 @@
+{
+  "run_id": "init",
+  "window_label": "test_init",
+  "metrics": {
+    "cumulative_return": -0.0446299263477713,
+    "annualised_return": -0.6128341567857085,
+    "sharpe_ratio": -7.084049106016323,
+    "sortino_ratio": -6.233716746381828,
+    "max_drawdown": 0.053669266243115785,
+    "n_trades": 33,
+    "profit_factor": 0.2603655462447561,
+    "win_rate": 0.09090909090909091,
+    "avg_holding_bars": 1.0
+  },
+  "passed_threshold": false,
+  "risk_stats": {
+    "total_intercepts": 6,
+    "intercept_reasons": {
+      "cash_lt_one_lot": 6
+    }
+  },
+  "n_nav_points": 97,
+  "n_trades": 33
+}

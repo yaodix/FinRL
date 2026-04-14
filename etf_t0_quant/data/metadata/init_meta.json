@@ -1,0 +1,50 @@
+{
+  "run_id": "init",
+  "created_at": "2026-04-14T09:46:03.685439",
+  "symbol": "159740",
+  "interval": "30m",
+  "source": "tickflow",
+  "raw_rows": 2325,
+  "feature_rows": 2275,
+  "raw_time_range": [
+    "2025-01-24 13:30:00",
+    "2026-04-14 10:00:00"
+  ],
+  "feature_time_range": [
+    "2025-02-11 14:30:00+08:00",
+    "2026-04-14 10:00:00+08:00"
+  ],
+  "feature_columns": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "amount",
+    "returns",
+    "log_ret",
+    "amplitude",
+    "volume_ma",
+    "volume_ratio",
+    "close_position",
+    "rsi",
+    "rsi_norm_raw",
+    "atr",
+    "atr_ratio",
+    "ema_diff",
+    "bb_width",
+    "vol20",
+    "time_slot",
+    "is_near_close",
+    "returns_norm",
+    "amplitude_norm",
+    "atr_ratio_norm",
+    "ema_diff_norm",
+    "bb_width_norm",
+    "vol20_norm",
+    "volume_ratio_norm",
+    "rsi_norm"
+  ],
+  "data_hash": "0fafd8850acca0a99869f556ec83da9f",
+  "adjust_note": "no_adjust_mv1"
+}
