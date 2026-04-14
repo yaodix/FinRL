@@ -2,6 +2,9 @@
 Unit tests for data_pipeline module.
 Tests: resample, validate, clean, feature build, normalize.
 """
+import io
+import zipfile
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -202,3 +205,69 @@ def test_normalize_features_clipped(df_30m, cfg):
         if col in df_norm.columns:
             assert df_norm[col].max() <= 3.01, f"{col} exceeds clip bound"
             assert df_norm[col].min() >= -3.01, f"{col} below clip bound"
+
+
+def test_read_etf_1min_from_zip(tmp_path):
+    from etf_t0_quant.data_pipeline import read_etf_1min_from_zip
+
+    zip_dir = tmp_path / "etf_zip"
+    zip_dir.mkdir()
+
+    day_2020 = pd.DataFrame(
+        {
+            "code": ["159001.SZ", "510300.SH"],
+            "trade_time": [
+                "2020-12-31 14:59:00",
+                "2020-12-31 14:59:00",
+            ],
+            "open": [0.9, 3.0],
+            "high": [1.0, 3.1],
+            "low": [0.8, 2.9],
+            "close": [0.95, 3.0],
+            "vol": [90.0, 999.0],
+            "amount": [8550.0, 999000.0],
+            "date": [20201231, 20201231],
+        }
+    )
+
+    day_2021 = pd.DataFrame(
+        {
+            "code": ["159001.SZ", "159001.SZ", "510300.SH"],
+            "trade_time": [
+                "2021-01-04 09:30:00",
+                "2021-01-04 09:31:00",
+                "2021-01-04 09:31:00",
+            ],
+            "open": [1.0, 1.1, 3.0],
+            "high": [1.0, 1.2, 3.1],
+            "low": [1.0, 1.0, 2.9],
+            "close": [1.0, 1.1, 3.0],
+            "vol": [100.0, 120.0, 999.0],
+            "amount": [10000.0, 13200.0, 999000.0],
+            "date": [20210104, 20210104, 20210104],
+        }
+    )
+
+    with zipfile.ZipFile(zip_dir / "2020.zip", "w") as zf:
+        buf = io.BytesIO()
+        day_2020.to_parquet(buf, index=False)
+        zf.writestr("20201231.parquet", buf.getvalue())
+
+    with zipfile.ZipFile(zip_dir / "2021.zip", "w") as zf:
+        for name, df in (("20210104.parquet", day_2021),):
+            buf = io.BytesIO()
+            df.to_parquet(buf, index=False)
+            zf.writestr(name, buf.getvalue())
+
+    out = read_etf_1min_from_zip(
+        symbol="159001",
+        start_time="2020-12-31 14:59:00",
+        end_time="2021-01-04 09:31:00",
+        zip_dir=zip_dir,
+    )
+
+    assert len(out) == 3
+    assert list(out.columns) == ["code", "trade_time", "open", "high", "low", "close", "vol", "amount", "date"]
+    assert out["trade_time"].iloc[0] == "2020-12-31 14:59:00"
+    assert out["trade_time"].iloc[-1] == "2021-01-04 09:31:00"
+    assert set(out["code"].unique()) == {"159001.SZ"}
