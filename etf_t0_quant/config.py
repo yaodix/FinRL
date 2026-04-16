@@ -9,24 +9,26 @@ Three usage patterns:
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import List, Literal, Optional
-
+from  dotenv import load_dotenv
 import yaml
 from pydantic import BaseModel, Field
 
+load_dotenv()  # Load .env file for environment variables (e.g. API keys)
 
 # ─────────────────────────── sub-configs ─────────────────────────────
 
 class BaseConfig(BaseModel):
-    symbol: str = "159740"
+    symbol: str = "159740.SZ"
     interval: Literal["15m", "30m"] = "30m"
     timezone: str = "Asia/Shanghai"
-    base_dir: Path = Path("etf_t0_quant")
+    base_dir: Path = Path(__file__).resolve().parent.parent / "etf_t0_quant"  # 改为工程目录+/etf_t0_quant
 
     @property
     def data_dir(self) -> Path:
-        return self.base_dir / "data"
+        return self.base_dir / "workdata"
 
     @property
     def models_dir(self) -> Path:
@@ -42,20 +44,20 @@ class BaseConfig(BaseModel):
 
     @property
     def reports_dir(self) -> Path:
-        return self.base_dir / "data" / "reports"
+        return self.base_dir / "workdata" / "reports"
 
     @property
     def metadata_dir(self) -> Path:
-        return self.base_dir / "data" / "metadata"
+        return self.base_dir / "workdata" / "metadata"
 
 
 class DataConfig(BaseModel):
     source: Literal["tickflow", "local"] = "local"
-    tickflow_token: Optional[str] = None
+    tickflow_API_KEY: Optional[str] = os.getenv("TICKFLOW_TOKEN")
     # Path to a local CSV/Parquet file or a directory of files (source=local)
-    local_csv_path: Optional[str] = None
+    local_csv_path: Optional[str|Path] = None
     # Optional directory for persisting raw TickFlow responses as parquet
-    raw_cache_dir: Optional[str] = None
+    raw_cache_dir: Optional[str|Path] = None
 
 
 class FeatureConfig(BaseModel):

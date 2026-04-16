@@ -8,14 +8,14 @@ from ..logger import get_logger
 log = get_logger("data")
 
 
-def clean_ohlcv(df: pd.DataFrame, timezone: str = "Asia/Shanghai") -> pd.DataFrame:
+def clean_ohlcv(df_in: pd.DataFrame, timezone: str = "Asia/Shanghai") -> pd.DataFrame:
     """Apply cleaning rules for OHLCV data."""
-    df = df.copy()
+    df = df_in.copy()
 
-    if df.index.tz is None:
-        df.index = df.index.tz_localize(timezone)
-    else:
-        df.index = df.index.tz_convert(timezone)
+    # if df.index.tz is None:
+    #     df.index = df.index.tz_localize(timezone)
+    # else:
+    #     df.index = df.index.tz_convert(timezone)
 
     df = df[~df.index.duplicated(keep="first")]
     df = df.sort_index()
@@ -38,6 +38,9 @@ def clean_ohlcv(df: pd.DataFrame, timezone: str = "Asia/Shanghai") -> pd.DataFra
         '''        
         return g.ffill(limit=2)
     
-    df = df.groupby(df.index.date, group_keys=False).apply(_ffill_day)
+    # df = df.groupby(df.index.date, group_keys=False).apply(_ffill_day)
+    
+    # 对比clean前后数据，统计填充的行数和连续性问题的行数
+    
 
     return df

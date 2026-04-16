@@ -75,11 +75,11 @@ def _read_json_files(pattern: str) -> list:
 
 def _load_features() -> pd.DataFrame | None:
     p = (
-        BASE_DIR / "data" / "features"
-        / cfg.base.symbol / cfg.base.interval / "data.parquet"
+        BASE_DIR / "workdata" / "features"
+        / cfg.base.symbol / cfg.base.interval / "data.csv"
     )
     if p.exists():
-        return pd.read_parquet(p)
+        return pd.read_csv(p, parse_dates=["trade_time"])
     return None
 
 
@@ -89,12 +89,12 @@ def _load_backtest_reports() -> list:
 
 
 def _load_quality_reports() -> list:
-    pattern = str(BASE_DIR / "data" / "reports" / "*_quality.json")
+    pattern = str(BASE_DIR / "workdata" / "reports" / "*_quality.json")
     return _read_json_files(pattern)
 
 
 def _load_metadata() -> list:
-    pattern = str(BASE_DIR / "data" / "metadata" / "*_meta.json")
+    pattern = str(BASE_DIR / "workdata" / "metadata" / "*_meta.json")
     return _read_json_files(pattern)
 
 

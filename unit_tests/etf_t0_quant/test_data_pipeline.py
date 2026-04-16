@@ -168,12 +168,13 @@ def test_build_features_no_future_leakage(df_30m, cfg):
     from etf_t0_quant.data_pipeline import build_features, clean_ohlcv
     df_c = clean_ohlcv(df_30m)
     df_f = build_features(df_c, cfg.feature, "30m")
-    # Check EMA is strictly causal (ema_diff at t uses close up to t)
-    # Duplicate the first 10 rows and verify features are identical vs original
-    df_f2 = build_features(df_c.iloc[:20], cfg.feature, "30m")
+    # Compare only the overlapping valid window after rolling/dropna warmup.
+    df_f2 = build_features(df_c.iloc[:120], cfg.feature, "30m")
+    common_index = df_f.index.intersection(df_f2.index)
+    assert len(common_index) > 0
     pd.testing.assert_series_equal(
-        df_f["ema_diff"].iloc[:20].reset_index(drop=True),
-        df_f2["ema_diff"].reset_index(drop=True),
+        df_f.loc[common_index, "ema_diff"].reset_index(drop=True),
+        df_f2.loc[common_index, "ema_diff"].reset_index(drop=True),
         check_names=False, rtol=1e-5,
     )
 
@@ -184,13 +185,15 @@ def test_normalize_features_no_future(df_30m, cfg):
     df_c = clean_ohlcv(df_30m)
     df_feat = build_features(df_c, cfg.feature, "30m")
     df_norm_full = normalize_features(df_feat, cfg.feature)
-    df_norm_trunc = normalize_features(df_feat.iloc[:100], cfg.feature)
+    df_norm_trunc = normalize_features(df_feat.iloc[:200], cfg.feature)
 
-    # The first 100 rows should match between full and truncated normalization
+    # Compare only the overlapping valid window after rolling normalization warmup.
+    common_index = df_norm_full.index.intersection(df_norm_trunc.index)
+    assert len(common_index) > 0
     for col in ["returns_norm", "amplitude_norm"]:
         if col in df_norm_full.columns and col in df_norm_trunc.columns:
-            full_head = df_norm_full[col].iloc[:100].reset_index(drop=True)
-            trunc = df_norm_trunc[col].reset_index(drop=True)
+            full_head = df_norm_full.loc[common_index, col].reset_index(drop=True)
+            trunc = df_norm_trunc.loc[common_index, col].reset_index(drop=True)
             pd.testing.assert_series_equal(full_head, trunc, check_names=False, rtol=1e-5)
 
 
@@ -235,9 +238,9 @@ def test_local_file_fetcher_reads_directory(tmp_path):
     )
 
     csv_path = tmp_path / "bars_a.csv"
-    parquet_path = tmp_path / "bars_b.parquet"
+    csv_path_2 = tmp_path / "bars_b.csv"
     day1.to_csv(csv_path, index=False)
-    day2.to_parquet(parquet_path, index=False)
+    day2.to_csv(csv_path_2, index=False)
 
     fetcher = LocalFileFetcher(DataConfig(local_csv_path=str(tmp_path)))
     out = fetcher.fetch_full("159001", "30m")
@@ -265,8 +268,8 @@ def test_local_file_fetcher_incremental_filters_since(tmp_path):
             "amount": [10000.0, 13800.0],
         }
     )
-    file_path = tmp_path / "bars.parquet"
-    df.to_parquet(file_path, index=False)
+    file_path = tmp_path / "bars.csv"
+    df.to_csv(file_path, index=False)
 
     fetcher = LocalFileFetcher(DataConfig(local_csv_path=str(file_path)))
     out = fetcher.fetch_incremental("159001", "30m", pd.Timestamp("2021-01-04 09:30:00"))
@@ -349,11 +352,11 @@ def test_tickflow_fetcher_fetch_incremental_updates_cache(tmp_path):
         fetcher = TickflowFetcher(cfg)
         out = fetcher.fetch_incremental("159740", "30m", pd.Timestamp("2021-01-04 09:30:00"))
 
-    cache_path = tmp_path / "raw_cache" / "159740" / "30m" / "tickflow_raw.parquet"
+    cache_path = tmp_path / "raw_cache" / "159740" / "30m" / "tickflow_raw.csv"
     assert len(out) == 1
     assert out.index[0] == pd.Timestamp("2021-01-04 10:00:00")
     assert cache_path.exists()
 
-    cached = pd.read_parquet(cache_path)
+    cached = pd.read_csv(cache_path)
     assert len(cached) == 2
     assert list(cached["trade_time"].astype(str)) == ["2021-01-04 09:30:00", "2021-01-04 10:00:00"]

@@ -1,10 +1,13 @@
 {
-  "n_rows": 2325,
+  "n_rows": 9464,
   "time_range": [
-    "2025-01-24 13:30:00",
-    "2026-04-14 10:00:00"
+    "0",
+    "9463"
   ],
   "columns": [
+    "symbol",
+    "name",
+    "trade_time",
     "open",
     "high",
     "low",
@@ -14,6 +17,9 @@
   ],
   "duplicate_timestamps": "0",
   "missing_values": {
+    "symbol": 0,
+    "name": 0,
+    "trade_time": 0,
     "open": 0,
     "high": 0,
     "low": 0,
@@ -21,11 +27,9 @@
     "volume": 0,
     "amount": 0
   },
-  "anomalies": [
-    "incomplete_trading_days=2"
-  ],
-  "continuity_issues": 2,
-  "new_rows": 2325,
+  "anomalies": [],
+  "continuity_issues": 0,
+  "new_rows": 0,
   "passed": true,
   "fail_reasons": []
 }

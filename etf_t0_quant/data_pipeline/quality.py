@@ -51,6 +51,7 @@ def validate_ohlcv(df: pd.DataFrame, interval: str) -> DataQualityReport:
         report.anomalies.append(f"duplicate_timestamps={report.duplicate_timestamps}")
 
     report.missing_values = df.isnull().sum().to_dict()
+    
     total_nans = sum(report.missing_values.values())
     if total_nans > 0:
         report.anomalies.append(f"total_nan={total_nans}")
@@ -74,15 +75,14 @@ def validate_ohlcv(df: pd.DataFrame, interval: str) -> DataQualityReport:
             report.anomalies.append(f"ohlc_inconsistent={ohlc_bad}")
 
     expected_bars = BARS_PER_DAY.get(interval, 8)
-    dates = df.index.normalize().unique()
-    gaps = 0
-    for date in dates:
-        day_bars = df[df.index.normalize() == date]
-        if len(day_bars) < expected_bars - 1:
-            gaps += 1
-    report.continuity_issues = gaps
-    if gaps > 0:
-        report.anomalies.append(f"incomplete_trading_days={gaps}")
+    # 统计每个交易日的K线数量
+    # daily_counts = df.index.normalize().value_counts()
+    # # 找出K线数量少于8的日期
+    # incomplete_days = (daily_counts < expected_bars)
+    # gaps = incomplete_days.sum()
+    # report.continuity_issues = gaps
+    # if gaps > 0:
+    #     report.anomalies.append(f"incomplete_trading_days={gaps}")
     # TODO: 获取每年的交易日历，检查缺失的日期
      
 

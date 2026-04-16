@@ -65,6 +65,18 @@ def compare_ohlcv(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     
     return pd.DataFrame(diff_info)
     
+class LocalFileFetcher():
+    """Fetches OHLCV data from local CSV files."""
+
+    def __init__(self, file_path: Path):
+        self.file_path = file_path
+
+    def fetch(self) -> pd.DataFrame:
+        """Read OHLCV data from a local CSV file."""
+        if not self.file_path.exists():
+            raise FileNotFoundError(f"Local data file not found: {self.file_path}")
+        df = pd.read_csv(self.file_path)
+        return df
     
 
 class TickflowFetcher():

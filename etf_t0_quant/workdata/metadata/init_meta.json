@@ -1,39 +1,23 @@
 {
   "run_id": "init",
-  "created_at": "2026-04-14T09:46:03.685439",
-  "symbol": "159740",
+  "created_at": "2026-04-16T16:14:18.972395",
+  "symbol": "159740.SZ",
   "interval": "30m",
-  "source": "tickflow",
-  "raw_rows": 2325,
-  "feature_rows": 2275,
+  "source": "local",
+  "raw_rows": 9464,
+  "feature_rows": 9414,
   "raw_time_range": [
-    "2025-01-24 13:30:00",
-    "2026-04-14 10:00:00"
+    "0",
+    "9463"
   ],
   "feature_time_range": [
-    "2025-02-11 14:30:00+08:00",
-    "2026-04-14 10:00:00+08:00"
+    "50",
+    "9463"
   ],
   "feature_columns": [
+    "trade_time",
     "open",
-    "high",
-    "low",
-    "close",
-    "volume",
-    "amount",
-    "returns",
-    "log_ret",
-    "amplitude",
-    "volume_ma",
-    "volume_ratio",
     "close_position",
-    "rsi",
-    "rsi_norm_raw",
-    "atr",
-    "atr_ratio",
-    "ema_diff",
-    "bb_width",
-    "vol20",
     "time_slot",
     "is_near_close",
     "returns_norm",
@@ -45,6 +29,6 @@
     "volume_ratio_norm",
     "rsi_norm"
   ],
-  "data_hash": "0fafd8850acca0a99869f556ec83da9f",
+  "data_hash": "e963a770614f76cc937e82111b017884",
   "adjust_note": "no_adjust_mv1"
 }

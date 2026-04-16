@@ -6,14 +6,13 @@ End-to-end one-shot workflow:
 Usage
 -----
     # Token via CLI
-    python etf_t0_quant/run_workflow.py --token YOUR_TOKEN
+    python etf_t0_quant/run_workflow.py 
 
     # Token via environment variable (recommended)
     ETF_TICKFLOW_TOKEN=xxx python etf_t0_quant/run_workflow.py
 
     # Custom options
     python etf_t0_quant/run_workflow.py \\
-        --token YOUR_TOKEN \\
         --symbol 159740 \\
         --interval 30m \\
         --n_trials 10 \\
