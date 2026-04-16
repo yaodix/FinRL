@@ -33,8 +33,11 @@ def clean_ohlcv(df: pd.DataFrame, timezone: str = "Asia/Shanghai") -> pd.DataFra
             df = df[~bad]
 
     def _ffill_day(g: pd.DataFrame) -> pd.DataFrame:
+        '''
+        对每一天的数据进行前向填充，最多填充2行，超过则认为是连续性问题
+        '''        
         return g.ffill(limit=2)
-
+    
     df = df.groupby(df.index.date, group_keys=False).apply(_ffill_day)
 
     return df

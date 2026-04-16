@@ -8,7 +8,6 @@
   "data": {
     "source": "tickflow",
     "tickflow_token": "tk_26257d2ae59645ccbdf30403fa624df6",
-    "incremental_window_days": 5,
     "local_csv_path": null,
     "needs_resample": false
   },

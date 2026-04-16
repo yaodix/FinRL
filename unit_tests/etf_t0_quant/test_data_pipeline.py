@@ -2,8 +2,6 @@
 Unit tests for data_pipeline module.
 Tests: resample, validate, clean, feature build, normalize.
 """
-import io
-import zipfile
 
 import numpy as np
 import pandas as pd
@@ -207,67 +205,155 @@ def test_normalize_features_clipped(df_30m, cfg):
             assert df_norm[col].min() >= -3.01, f"{col} below clip bound"
 
 
-def test_read_etf_1min_from_zip(tmp_path):
-    from etf_t0_quant.data_pipeline import read_etf_1min_from_zip
+def test_local_file_fetcher_reads_directory(tmp_path):
+    from etf_t0_quant.config import DataConfig
+    from etf_t0_quant.data_pipeline import LocalFileFetcher
 
-    zip_dir = tmp_path / "etf_zip"
-    zip_dir.mkdir()
-
-    day_2020 = pd.DataFrame(
+    day1 = pd.DataFrame(
         {
             "code": ["159001.SZ", "510300.SH"],
-            "trade_time": [
-                "2020-12-31 14:59:00",
-                "2020-12-31 14:59:00",
-            ],
-            "open": [0.9, 3.0],
-            "high": [1.0, 3.1],
-            "low": [0.8, 2.9],
-            "close": [0.95, 3.0],
-            "vol": [90.0, 999.0],
-            "amount": [8550.0, 999000.0],
-            "date": [20201231, 20201231],
+            "trade_time": ["2021-01-04 09:30:00", "2021-01-04 09:30:00"],
+            "open": [1.0, 3.0],
+            "high": [1.1, 3.1],
+            "low": [0.9, 2.9],
+            "close": [1.05, 3.0],
+            "vol": [100.0, 999.0],
+            "amount": [10000.0, 999000.0],
         }
     )
-
-    day_2021 = pd.DataFrame(
+    day2 = pd.DataFrame(
         {
-            "code": ["159001.SZ", "159001.SZ", "510300.SH"],
-            "trade_time": [
-                "2021-01-04 09:30:00",
-                "2021-01-04 09:31:00",
-                "2021-01-04 09:31:00",
-            ],
-            "open": [1.0, 1.1, 3.0],
-            "high": [1.0, 1.2, 3.1],
-            "low": [1.0, 1.0, 2.9],
-            "close": [1.0, 1.1, 3.0],
-            "vol": [100.0, 120.0, 999.0],
-            "amount": [10000.0, 13200.0, 999000.0],
-            "date": [20210104, 20210104, 20210104],
+            "code": ["159001.SZ"],
+            "trade_time": ["2021-01-04 10:00:00"],
+            "open": [1.05],
+            "high": [1.2],
+            "low": [1.0],
+            "close": [1.15],
+            "vol": [120.0],
+            "amount": [13800.0],
         }
     )
 
-    with zipfile.ZipFile(zip_dir / "2020.zip", "w") as zf:
-        buf = io.BytesIO()
-        day_2020.to_parquet(buf, index=False)
-        zf.writestr("20201231.parquet", buf.getvalue())
+    csv_path = tmp_path / "bars_a.csv"
+    parquet_path = tmp_path / "bars_b.parquet"
+    day1.to_csv(csv_path, index=False)
+    day2.to_parquet(parquet_path, index=False)
 
-    with zipfile.ZipFile(zip_dir / "2021.zip", "w") as zf:
-        for name, df in (("20210104.parquet", day_2021),):
-            buf = io.BytesIO()
-            df.to_parquet(buf, index=False)
-            zf.writestr(name, buf.getvalue())
+    fetcher = LocalFileFetcher(DataConfig(local_csv_path=str(tmp_path)))
+    out = fetcher.fetch_full("159001", "30m")
 
-    out = read_etf_1min_from_zip(
-        symbol="159001",
-        start_time="2020-12-31 14:59:00",
-        end_time="2021-01-04 09:31:00",
-        zip_dir=zip_dir,
+    assert list(out.columns) == ["symbol", "open", "high", "low", "close", "volume", "amount"]
+    assert len(out) == 2
+    assert out.index[0] == pd.Timestamp("2021-01-04 09:30:00")
+    assert out.index[-1] == pd.Timestamp("2021-01-04 10:00:00")
+    assert set(out["symbol"].unique()) == {"159001.SZ"}
+
+
+def test_local_file_fetcher_incremental_filters_since(tmp_path):
+    from etf_t0_quant.config import DataConfig
+    from etf_t0_quant.data_pipeline import LocalFileFetcher
+
+    df = pd.DataFrame(
+        {
+            "symbol": ["159001.SZ", "159001.SZ"],
+            "timestamp": ["2021-01-04 09:30:00", "2021-01-04 10:00:00"],
+            "open": [1.0, 1.1],
+            "high": [1.1, 1.2],
+            "low": [0.9, 1.0],
+            "close": [1.05, 1.15],
+            "volume": [100.0, 120.0],
+            "amount": [10000.0, 13800.0],
+        }
+    )
+    file_path = tmp_path / "bars.parquet"
+    df.to_parquet(file_path, index=False)
+
+    fetcher = LocalFileFetcher(DataConfig(local_csv_path=str(file_path)))
+    out = fetcher.fetch_incremental("159001", "30m", pd.Timestamp("2021-01-04 09:30:00"))
+
+    assert len(out) == 1
+    assert out.index[0] == pd.Timestamp("2021-01-04 10:00:00")
+
+
+def test_compare_ohlcv_detects_mismatches():
+    from etf_t0_quant.data_pipeline import compare_ohlcv
+
+    index = pd.to_datetime(["2021-01-04 09:30:00", "2021-01-04 10:00:00"])
+    left = pd.DataFrame(
+        {
+            "open": [1.0, 1.1],
+            "high": [1.1, 1.3],
+            "low": [0.9, 1.0],
+            "close": [1.05, 1.25],
+            "volume": [100.0, 120.0],
+        },
+        index=index,
+    )
+    right = pd.DataFrame(
+        {
+            "open": [1.0, 1.1],
+            "high": [1.1, 1.2],
+            "low": [0.9, 1.0],
+            "close": [1.05, 1.15],
+            "volume": [100.0, 140.0],
+        },
+        index=index,
     )
 
-    assert len(out) == 3
-    assert list(out.columns) == ["code", "trade_time", "open", "high", "low", "close", "vol", "amount", "date"]
-    assert out["trade_time"].iloc[0] == "2020-12-31 14:59:00"
-    assert out["trade_time"].iloc[-1] == "2021-01-04 09:31:00"
-    assert set(out["code"].unique()) == {"159001.SZ"}
+    report = compare_ohlcv(left, right)
+
+    assert report["common_rows"] == 2
+    assert report["difference_counts"]["high"] == 1
+    assert report["difference_counts"]["close"] == 1
+    assert report["difference_counts"]["volume"] == 1
+    assert len(report["samples"]) == 1
+
+
+def test_tickflow_fetcher_fetch_incremental_updates_cache(tmp_path):
+    from etf_t0_quant.config import DataConfig
+    from etf_t0_quant.data_pipeline import TickflowFetcher
+
+    response = pd.DataFrame(
+        {
+            "symbol": ["159740.SZ", "159740.SZ"],
+            "trade_time": ["2021-01-04 09:30:00", "2021-01-04 10:00:00"],
+            "open": [1.0, 1.1],
+            "high": [1.1, 1.2],
+            "low": [0.9, 1.0],
+            "close": [1.05, 1.15],
+            "volume": [100.0, 120.0],
+            "amount": [10000.0, 13800.0],
+        }
+    )
+
+    class FakeKlines:
+        def __init__(self, frame):
+            self.frame = frame
+
+        def get(self, *args, **kwargs):
+            return self.frame.copy()
+
+    class FakeTickFlow:
+        def __init__(self, api_key):
+            self.api_key = api_key
+            self.klines = FakeKlines(response)
+
+    fake_module = type("FakeModule", (), {"TickFlow": FakeTickFlow})
+    cfg = DataConfig(
+        source="tickflow",
+        tickflow_token="token",
+        raw_cache_dir=str(tmp_path / "raw_cache"),
+    )
+
+    with patch("etf_t0_quant.data_pipeline.fetchers.import_module", return_value=fake_module):
+        fetcher = TickflowFetcher(cfg)
+        out = fetcher.fetch_incremental("159740", "30m", pd.Timestamp("2021-01-04 09:30:00"))
+
+    cache_path = tmp_path / "raw_cache" / "159740" / "30m" / "tickflow_raw.parquet"
+    assert len(out) == 1
+    assert out.index[0] == pd.Timestamp("2021-01-04 10:00:00")
+    assert cache_path.exists()
+
+    cached = pd.read_parquet(cache_path)
+    assert len(cached) == 2
+    assert list(cached["trade_time"].astype(str)) == ["2021-01-04 09:30:00", "2021-01-04 10:00:00"]

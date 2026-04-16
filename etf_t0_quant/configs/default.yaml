@@ -11,8 +11,8 @@ data:
   source: "local"           # "tickflow" or "local"
   tickflow_token: null      # set via env var ETF_TICKFLOW_TOKEN or here
   incremental_window_days: 5
-  local_csv_path: null      # path to local CSV file when source=local
-  needs_resample: false     # set true when raw data is 1-minute
+  local_csv_path: null      # local CSV/Parquet file or directory when source=local
+  raw_cache_dir: null       # optional parquet cache directory for tickflow raw data
 
 feature:
   lookback_window: 30

@@ -1,11 +1,20 @@
 """Data quality report and validators."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Dict, List, Tuple
+import sys
 
+import json
 import pandas as pd
 
-from .constants import BARS_PER_DAY
+try:
+    from .constants import BARS_PER_DAY
+except ImportError:
+    module_dir = Path(__file__).resolve().parent
+    if str(module_dir) not in sys.path:
+        sys.path.insert(0, str(module_dir))
+    from constants import BARS_PER_DAY
 
 
 class DataQualityReport:
@@ -74,5 +83,22 @@ def validate_ohlcv(df: pd.DataFrame, interval: str) -> DataQualityReport:
     report.continuity_issues = gaps
     if gaps > 0:
         report.anomalies.append(f"incomplete_trading_days={gaps}")
+    # TODO: 获取每年的交易日历，检查缺失的日期
+     
 
     return report
+
+
+def _load_csv_for_report(csv_path: Path) -> pd.DataFrame:
+    df = pd.read_csv(csv_path, parse_dates=["trade_time"])
+    if "trade_time" in df.columns:
+        df = df.set_index("trade_time")
+    return df
+
+
+if __name__ == "__main__":
+    csv_path = Path(__file__).resolve().parents[1] / "workdata" / "159740_sync_30m" / "159740_sync_30m.csv"
+    df = _load_csv_for_report(csv_path)
+    report = validate_ohlcv(df, "30m")
+    print(json.dumps(report.to_dict(), indent=2, default=str))
+    

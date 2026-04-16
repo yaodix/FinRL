@@ -1,4 +1,4 @@
-"""Pipeline orchestrator for data fetch/clean/feature/save."""
+"""Pipeline orchestrator for data fetch/check/clean/feature/save."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,6 @@ from ..config import AppConfig
 from ..logger import get_logger, get_run_id
 from .cleaning import clean_ohlcv
 from .features import build_features, normalize_features
-from .fetchers import make_fetcher
 from .metadata import build_metadata
 from .quality import validate_ohlcv
 
@@ -23,7 +22,6 @@ class DataPipeline:
 
     def __init__(self, cfg: AppConfig) -> None:
         self.cfg = cfg
-        self.fetcher = make_fetcher(cfg.data)
         self._symbol = cfg.base.symbol
         self._interval = cfg.base.interval
 

@@ -52,12 +52,10 @@ class BaseConfig(BaseModel):
 class DataConfig(BaseModel):
     source: Literal["tickflow", "local"] = "local"
     tickflow_token: Optional[str] = None
-    # How many days back to fetch on incremental update
-    incremental_window_days: int = 5
-    # Path for local CSV/Parquet fallback (source=local)
+    # Path to a local CSV/Parquet file or a directory of files (source=local)
     local_csv_path: Optional[str] = None
-    # Whether source 1-minute data must be resampled
-    needs_resample: bool = False
+    # Optional directory for persisting raw TickFlow responses as parquet
+    raw_cache_dir: Optional[str] = None
 
 
 class FeatureConfig(BaseModel):

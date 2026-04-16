@@ -26,15 +26,17 @@ df = tf.klines.get(
     start_time=start,
     end_time=end,
     as_dataframe=True,
-    count=1000
+    count=10000,
+    adjust="forward_additive"
+    
 )
 # save
-# output_file = "Rl_trading_demo/project_one/data/518880.SH.30m_1000.csv"
+output_file = "/home/yao/Work/myproject/FinRL/etf_t0_quant/workdata/159740_tickflow.csv"
 # timestamp trade_times删除
 df = df.drop(columns=['timestamp', 'trade_date'])
 
 
-# df.to_csv(output_file, index=False)
-# print(df.head(20))
+df.to_csv(output_file, index=False)
+print(df.head(20))
 
-print(df.tail(5))
+# print(df.tail(5))
